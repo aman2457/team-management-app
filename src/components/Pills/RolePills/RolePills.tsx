@@ -7,44 +7,41 @@ interface PillsProps {
 }
 
 const RolePills: React.FC<PillsProps> = ({ text }) => {
-    let color = '';
     let displayText = '';
+    let className = '';
     switch (text) {
         case 'tech':
-            color = 'cyan';
+            className = 'px-3 py-1 w-fit font-semibold text-xs rounded-full shadow-sm bg-cyan-100 text-cyan-900 p-2';
             displayText = 'Tech';
             break;
         case 'marketing':
-            color= 'indigo';
+            className = 'px-3 py-1 w-fit font-semibold text-xs rounded-full shadow-sm bg-indigo-100 text-indigo-900 p-2';
             displayText = 'Marketing';
             break;
         case 'rnd':
-            color = 'blue';
+            className = 'px-3 py-1 w-fit font-semibold text-xs rounded-full shadow-sm bg-blue-100 text-blue-900 p-2';
             displayText = 'R&D';
             break;
         case 'design':
-            color = 'purple';
+            className = 'px-3 py-1 w-fit font-semibold text-xs rounded-full shadow-sm bg-purple-100 text-purple-900 p-2';
             displayText = 'Design';
             break;
         case 'qa':
-            color = 'pink';
+            className = 'px-3 py-1 w-fit font-semibold text-xs rounded-full shadow-sm bg-pink-100 text-pink-900 p-2';
             displayText = 'QA';
             break;
         case 'product':
-            color = 'sky';
+            className = 'px-3 py-1 w-fit font-semibold text-xs rounded-full shadow-sm bg-sky-100 text-sky-900 p-2';
             displayText = 'Product';
             break;
         default:
-            color = 'gray';
+            className = 'px-3 py-1 w-fit font-semibold text-xs rounded-full shadow-sm bg-gray-100 text-gray-900 p-2';
             displayText = 'Unknown';
             break;
     }
-    const className = `px-3 py-1 w-fit font-semibold text-xs rounded-full shadow-sm bg-${color}-100 text-${color}-900 p-2`;
-    const filledCircleClassName = `w-2 h-2 rounded-full bg-${color}-900 inline-block mr-2`;
 
     return (
         <div className={className}>
-            <div className={filledCircleClassName}></div>
             {displayText}
         </div>
 

@@ -177,7 +177,7 @@ export default function TeamMemberList() {
 
   return (
     <>
-    {renderDeleteSelectedWithTableTitle()}
+      {renderDeleteSelectedWithTableTitle()}
       <div className="mt-2 flex flex-col">
         <div className="-my-2 overflow-x-auto -mx-4 sm:-mx-6 lg:-mx-8">
           <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
@@ -238,13 +238,27 @@ export default function TeamMemberList() {
                 <button
                   className={`${
                     !table.getCanPreviousPage()
-                      ? 'bg-gray-100'
-                      : 'hover:bg-gray-200 hover:curstor-pointer bg-gray-100'
+                      ? 'bg-white-100 border border-black'
+                      : 'hover:bg-white-200 border hover:curstor-pointer bg-white-100 w-28 rounded-lg border-black'
                   } rounded p-1`}
                   onClick={() => table.previousPage()}
                   disabled={!table.getCanPreviousPage()}
                 >
-                  <span className="w-5 h-5">{'Previous'}</span>
+                  <div className="mr-1 text-lg font-medium flex justify-center gap-2 align-middle rounded-lg">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="size-6"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M11.03 3.97a.75.75 0 0 1 0 1.06l-6.22 6.22H21a.75.75 0 0 1 0 1.5H4.81l6.22 6.22a.75.75 0 1 1-1.06 1.06l-7.5-7.5a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 0 1 1.06 0Z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    Previous
+                  </div>
                 </button>
                 <span className="flex items-center gap-1">
                   {pages.map((page) => (
@@ -264,13 +278,27 @@ export default function TeamMemberList() {
                 <button
                   className={`${
                     !table.getCanNextPage()
-                      ? 'bg-gray-100'
-                      : 'hover:bg-gray-200 hover:curstor-pointer bg-gray-100'
+                      ? 'bg-white-100 border border-black'
+                      : 'hover:bg-white-200 border hover:curstor-pointer bg-white-100 w-28 rounded-lg border-black'
                   } rounded p-1`}
                   onClick={() => table.nextPage()}
                   disabled={!table.getCanNextPage()}
                 >
-                  <span className="w-5 h-5">{'Next'}</span>
+                  <div className="mr-1 text-lg font-medium flex justify-center gap-2 align-middle rounded-lg">
+                    Next
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="size-6"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M12.97 3.97a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 1 1-1.06-1.06l6.22-6.22H3a.75.75 0 0 1 0-1.5h16.19l-6.22-6.22a.75.75 0 0 1 0-1.06Z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
                 </button>
               </div>
               <div />
