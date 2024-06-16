@@ -13,14 +13,17 @@ import { memberList } from '../../data';
 import StatusPills from '../Pills/StatusPills/StatusPills';
 import RolePills from '../Pills/RolePills/RolePills';
 import DeleteUserConfirmationModal from '../ConfirmationModal/DeleteUserConfirmationModal';
+import UpdateUserModal from '../UpdateUserModal/UpdateUserModal';
 
 export default function TeamMemberList() {
   const [data] = React.useState(() => [...memberList]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const pages = Array.from({ length: data.length / 10 }, (_, i) => i + 1);
   const [userToDelete, setUserToDelete] = React.useState<TeamMember | null>(null);
+  const [userToUpdate, setUserToUpdate] = React.useState<TeamMember | null>(null);
 
   const [showModal, setShowModal] = React.useState(false);
+  const[ showEditModal, setShowEditModal] = React.useState(false);
 
   const columnHelper = createColumnHelper<TeamMember>();
 
@@ -120,7 +123,7 @@ export default function TeamMemberList() {
           </button>
           <button
             className="px-1 py-1 rounded-lg"
-            onClick={() => console.log(row.original)}
+            onClick={() => handleEditUser(row.original)}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -141,6 +144,26 @@ export default function TeamMemberList() {
       ),
     }),
   ];
+
+  const handleShowEditModal = () => {
+    setShowEditModal(true);
+  }
+
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
+  }
+
+  const handleEditUser = (row: TeamMember) => {
+    setUserToUpdate(row);
+    console.log(row, "to be updated");
+    handleShowEditModal();
+  }
+
+  const handleEditUserConfirmation = (updateUser: any) => {
+    console.log("User updated");
+    console.log(updateUser)
+    handleCloseEditModal();
+  }
 
   const handleShowModal = () => {
     setShowModal(true);
@@ -207,6 +230,19 @@ export default function TeamMemberList() {
           isOpen={showModal}
           onClose={handleCloseModal}
           onDelete={handleDeleteUserConfirmation}
+        />
+      </>
+    );
+  }
+
+  const renderEditUserModal = () => {
+    return (
+      <>
+        <UpdateUserModal
+          isOpen={showEditModal}
+          onClose={handleCloseEditModal}
+          onSave={handleEditUserConfirmation}
+          data={userToUpdate}
         />
       </>
     );
@@ -340,6 +376,7 @@ export default function TeamMemberList() {
                 </button>
               </div>
               {showModal && renderDeleteSelectedWithModal()}
+              {showEditModal && renderEditUserModal()}
               <div />
             </div>
           </div>
