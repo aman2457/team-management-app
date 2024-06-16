@@ -1,28 +1,18 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
+import TeamMemberList from './components/TeamMemberList/TeamMemberList';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-        <div className="bg-blue-500 text-white p-4">
-          This is a div with tailwind css
+    <div className="min-h-screen bg-white-100 text-gray-900">
+      <main className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <div className="">
+          <h1 className="text-xl font-semibold">Team Members</h1>
         </div>
-      
-      </header>
+        <div className="mt-4">
+          <TeamMemberList />
+        </div>
+      </main>
     </div>
   );
 }
