@@ -1,4 +1,5 @@
 type TeamMember = {
+    id: number;
     name: string;
     userName: string;
     avatar: string;

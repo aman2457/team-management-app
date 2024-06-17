@@ -1,17 +1,15 @@
-import React, { useState } from 'react';
+import React, { FormEvent, useState } from 'react';
 import Modal from 'react-modal';
 import { TeamMember } from '../../types/TeamMember';
 
 interface UpdateUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (updatedUser: TeamMember | null) => void;
+  onSave: (updatedUser: TeamMember | null) => Promise<void>;
   data: any;
 }
 
-
 const UpdateUserModal: React.FC<UpdateUserModalProps> = ({ isOpen, onClose, onSave, data }) => {
-  console.log(data)
     const[name, setName] = useState(data?.name || '');
     const [role, setRole] = useState(data?.role || '');
     const [email, setEmail] = useState(data?.email || '');
@@ -26,18 +24,15 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = ({ isOpen, onClose, onSa
       ]
 
 
-  const handleSave = () => {
-
-    console.log({ name, role, email });
+  const handleSave = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     const updatedUser = {
         ...data,
         name,
         role,
         email,
         };
-    console.log(updatedUser);
-    onSave(updatedUser); 
-    onClose(); 
+    await onSave(updatedUser); 
   };
 
   return (

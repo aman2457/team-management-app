@@ -9,21 +9,48 @@ import {
   SortingState,
   getPaginationRowModel,
 } from '@tanstack/react-table';
-import { memberList } from '../../data';
-import StatusPills from '../Pills/StatusPills/StatusPills';
-import RolePills from '../Pills/RolePills/RolePills';
 import DeleteUserConfirmationModal from '../ConfirmationModal/DeleteUserConfirmationModal';
 import UpdateUserModal from '../UpdateUserModal/UpdateUserModal';
+import RolePills from '../Pills/RolePills/RolePills';
+import StatusPills from '../Pills/StatusPills/StatusPills';
+import ReactModal from 'react-modal';
 
-export default function TeamMemberList() {
-  const [data] = React.useState(() => [...memberList]);
+interface TeamMemberListProps {
+  members: TeamMember[];
+  loading: boolean;
+  deleteMember: (id: number | null) => Promise<boolean>;
+  updateMember: (id: number, member: any) => Promise<boolean>;
+  deleteMembersByIds: (ids: number[]) => Promise<boolean>;
+  totalRecords: number;
+}
+
+export const TeamMemberList: React.FC<TeamMemberListProps> = (props) => {
+  const [data, setData] = React.useState(() => [...props.members]);
+  const [totalRecords, setTotalRecords] = React.useState<number>(
+    props.totalRecords
+  );
   const [sorting, setSorting] = React.useState<SortingState>([]);
+
   const pages = Array.from({ length: data.length / 10 }, (_, i) => i + 1);
-  const [userToDelete, setUserToDelete] = React.useState<TeamMember | null>(null);
-  const [userToUpdate, setUserToUpdate] = React.useState<TeamMember | null>(null);
+  if (data.length % 10 != 0) pages.push(pages.length + 1);
+
+  const [userToDelete, setUserToDelete] = React.useState<TeamMember | null>(
+    null
+  );
+  const [userToUpdate, setUserToUpdate] = React.useState<TeamMember | null>(
+    null
+  );
 
   const [showModal, setShowModal] = React.useState(false);
-  const[ showEditModal, setShowEditModal] = React.useState(false);
+  const [showEditModal, setShowEditModal] = React.useState(false);
+  const [textToShow, setTextToShow] = React.useState('');
+  const [showSuccess, setShowSuccess] = React.useState(false);
+  const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
+  const [showMultipleDeleteModal, setShowMultipleDeleteModal] =
+    React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  const [deleting, setDeleting] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
 
   const columnHelper = createColumnHelper<TeamMember>();
 
@@ -123,7 +150,7 @@ export default function TeamMemberList() {
           </button>
           <button
             className="px-1 py-1 rounded-lg"
-            onClick={() => handleEditUser(row.original)}
+            onClick={() => handleEditUserChange(row.original)}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -147,23 +174,31 @@ export default function TeamMemberList() {
 
   const handleShowEditModal = () => {
     setShowEditModal(true);
-  }
+  };
 
   const handleCloseEditModal = () => {
     setShowEditModal(false);
-  }
+  };
 
-  const handleEditUser = (row: TeamMember) => {
-    setUserToUpdate(row);
-    console.log(row, "to be updated");
+  const handleEditUserChange = (row: TeamMember) => {
     handleShowEditModal();
-  }
+    setUserToUpdate(row);
+  };
 
-  const handleEditUserConfirmation = (updateUser: any) => {
-    console.log("User updated");
-    console.log(updateUser)
-    handleCloseEditModal();
-  }
+  const handleEditUser = async (updatedUser: any) => {
+    if (userToUpdate === null) return;
+    const result = await props.updateMember(userToUpdate?.id, updatedUser);
+    if (result) {
+      const updatedData = data.map((user) =>
+        user.id === userToUpdate.id ? updatedUser : user
+      );
+      setData(updatedData);
+    }
+    setShowEditModal(false);
+    setShowSuccess(true);
+    setUserToUpdate(null);
+    setTextToShow('User Details changed!');
+  };
 
   const handleShowModal = () => {
     setShowModal(true);
@@ -173,18 +208,91 @@ export default function TeamMemberList() {
     setShowModal(false);
   };
 
+  const handleShowMultipleDeleteModal = () => {
+    setShowMultipleDeleteModal(true);
+  };
+
+  const handleCloseMultipleDeleteModal = () => {
+    setShowMultipleDeleteModal(false);
+  };
+
   const handleDeleteUser = (row: TeamMember) => {
-    console.log(row, "to be deleted");
     handleShowModal();
     setUserToDelete(row);
   };
 
-  const handleDeleteUserConfirmation = () => {
-    console.log(userToDelete, "deleting user")
-    handleCloseModal();
+  const renderActionSuccess = (actionText: string, loading: boolean) => {
+    return (
+      <ReactModal
+        isOpen={true}
+        className="fixed inset-0 flex items-center justify-center"
+        overlayClassName="fixed inset-0 bg-gray-900 bg-opacity-50"
+        ariaHideApp={false}
+        onRequestClose={() => {
+          setShowSuccess(false);
+          setTextToShow('');
+        }}
+      >
+        <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+          {loading ? (
+            <div className="flex justify-center items-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+            </div>
+          ) : (
+            <>
+              {' '}
+              <svg
+                width="64"
+                height="64"
+                viewBox="0 0 56 56"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  x="4"
+                  y="4"
+                  width="48"
+                  height="48"
+                  rx="24"
+                  fill="#D1FADF"
+                />
+                <rect
+                  x="4"
+                  y="4"
+                  width="48"
+                  height="48"
+                  rx="24"
+                  stroke="#ECFDF3"
+                  stroke-width="8"
+                />
+                <path
+                  d="M38 27.08V28C37.9988 30.1564 37.3005 32.2547 36.0093 33.9818C34.7182 35.709 32.9033 36.9725 30.8354 37.5839C28.7674 38.1953 26.5573 38.1219 24.5345 37.3746C22.5117 36.6273 20.7847 35.2461 19.611 33.4371C18.4373 31.628 17.8798 29.4881 18.0217 27.3363C18.1636 25.1846 18.9972 23.1363 20.3983 21.4971C21.7994 19.8578 23.6928 18.7154 25.7962 18.2401C27.8996 17.7649 30.1003 17.9823 32.07 18.86M38 20L28 30.01L25 27.01"
+                  stroke="#039855"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <h2 className="text-lg font-semibold mb-4 mt-3">{actionText}</h2>
+            </>
+          )}
+        </div>
+      </ReactModal>
+    );
+  };
+
+  const handleDeleteUserConfirmation = async () => {
+    if (userToDelete === null) return;
+    const result = await props.deleteMember(userToDelete?.id);
+    if (result) {
+      setData(data.filter((user) => user.id !== userToDelete.id));
+      setTotalRecords(totalRecords - 1);
+    }
+    setShowModal(false);
+    setTextToShow('User successfully deleted!');
+    setShowSuccess(true);
     setUserToDelete(null);
-    console.log("User deleted");
-  }
+  };
 
   const table = useReactTable({
     data,
@@ -207,14 +315,12 @@ export default function TeamMemberList() {
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-3xl font-bold">Team Members</h1>
         <div className="mr-auto ml-4 px-1 py-1 w-fit font-semibold text-sm rounded-full shadow-sm bg-purple-100 text-purple-900">
-          {table.getRowModel().rows.length} users
+          {totalRecords} users
         </div>
         <div className="flex gap-2">
           <button
             className="bg-purple-500 text-white px-4 py-2 rounded-lg"
-            onClick={() => {
-              console.log(table.getSelectedRowModel().flatRows);
-            }}
+            onClick={handleDeleteSelectedChange}
           >
             Delete Selected
           </button>
@@ -223,17 +329,52 @@ export default function TeamMemberList() {
     );
   };
 
-  const renderDeleteSelectedWithModal = () => {
+  const renderDeleteMemberModal = () => {
     return (
       <>
         <DeleteUserConfirmationModal
           isOpen={showModal}
           onClose={handleCloseModal}
           onDelete={handleDeleteUserConfirmation}
+          deleteMessage="Are you sure you want to delete this user?"
         />
       </>
     );
-  }
+  };
+
+  const renderDeleteSelectModal = () => {
+    return (
+      <>
+        <DeleteUserConfirmationModal
+          isOpen={showMultipleDeleteModal}
+          onClose={handleCloseMultipleDeleteModal}
+          onDelete={handleDeleteSelected}
+          deleteMessage="Are you sure you want to delete selected users?"
+        />
+      </>
+    );
+  };
+
+  const handleDeleteSelectedChange = async () => {
+    handleShowMultipleDeleteModal();
+    setSelectedIds(
+      table.getSelectedRowModel().flatRows.map((row) => row.original.id)
+    );
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.length === 0) return;
+    const result = await props.deleteMembersByIds(selectedIds);
+    if (result) {
+      setData(data.filter((user) => !selectedIds.includes(user.id)));
+      setTotalRecords(totalRecords - selectedIds.length);
+    }
+    handleCloseMultipleDeleteModal();
+    setTextToShow('Users successfully deleted!');
+    setShowSuccess(true);
+    setSelectedIds([]);
+    table.resetRowSelection();
+  };
 
   const renderEditUserModal = () => {
     return (
@@ -241,13 +382,82 @@ export default function TeamMemberList() {
         <UpdateUserModal
           isOpen={showEditModal}
           onClose={handleCloseEditModal}
-          onSave={handleEditUserConfirmation}
+          onSave={handleEditUser}
           data={userToUpdate}
         />
       </>
     );
-  }
+  };
 
+  const renderPagination = () => (
+    <div className="flex sm:flex-row flex-col w-98 m-2 items-center justify-between gap-2 text-xs">
+      <button
+        className={`${
+          !table.getCanPreviousPage()
+            ? 'bg-white-100 border border-black'
+            : 'hover:bg-white-200 border hover:curstor-pointer bg-white-100 w-28 rounded-lg border-black'
+        } rounded p-1`}
+        onClick={() => table.previousPage()}
+        disabled={!table.getCanPreviousPage()}
+      >
+        <div className="mr-1 text-lg font-medium flex justify-center gap-2 align-middle rounded-lg">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            className="size-6"
+          >
+            <path
+              fillRule="evenodd"
+              d="M11.03 3.97a.75.75 0 0 1 0 1.06l-6.22 6.22H21a.75.75 0 0 1 0 1.5H4.81l6.22 6.22a.75.75 0 1 1-1.06 1.06l-7.5-7.5a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 0 1 1.06 0Z"
+              clipRule="evenodd"
+            />
+          </svg>
+          Previous
+        </div>
+      </button>
+      <span className="flex items-center gap-1">
+        {pages.map((page) => (
+          <button
+            key={page}
+            className={`${
+              table.getState().pagination.pageIndex === page - 1
+                ? 'w-6 bg-purple-100'
+                : 'w-6 hover:bg-purple-100 hover:curstor-pointer bg-gray-100'
+            } rounded p-1`}
+            onClick={() => table.setPageIndex(page - 1)}
+          >
+            {page}
+          </button>
+        ))}
+      </span>
+      <button
+        className={`${
+          !table.getCanNextPage()
+            ? 'bg-white-100 border border-black'
+            : 'hover:bg-white-200 border hover:curstor-pointer bg-white-100 w-28 rounded-lg border-black'
+        } rounded p-1`}
+        onClick={() => table.nextPage()}
+        disabled={!table.getCanNextPage()}
+      >
+        <div className="mr-1 text-lg font-medium flex justify-center gap-2 align-middle rounded-lg">
+          Next
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            className="size-6"
+          >
+            <path
+              fillRule="evenodd"
+              d="M12.97 3.97a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 1 1-1.06-1.06l6.22-6.22H3a.75.75 0 0 1 0-1.5h16.19l-6.22-6.22a.75.75 0 0 1 0-1.06Z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </div>
+      </button>
+    </div>
+  );
 
   return (
     <>
@@ -308,75 +518,11 @@ export default function TeamMemberList() {
                   ))}
                 </tbody>
               </table>
-              <div className="flex sm:flex-row flex-col w-98 m-2 items-center justify-between gap-2 text-xs">
-                <button
-                  className={`${
-                    !table.getCanPreviousPage()
-                      ? 'bg-white-100 border border-black'
-                      : 'hover:bg-white-200 border hover:curstor-pointer bg-white-100 w-28 rounded-lg border-black'
-                  } rounded p-1`}
-                  onClick={() => table.previousPage()}
-                  disabled={!table.getCanPreviousPage()}
-                >
-                  <div className="mr-1 text-lg font-medium flex justify-center gap-2 align-middle rounded-lg">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      className="size-6"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M11.03 3.97a.75.75 0 0 1 0 1.06l-6.22 6.22H21a.75.75 0 0 1 0 1.5H4.81l6.22 6.22a.75.75 0 1 1-1.06 1.06l-7.5-7.5a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 0 1 1.06 0Z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    Previous
-                  </div>
-                </button>
-                <span className="flex items-center gap-1">
-                  {pages.map((page) => (
-                    <button
-                      key={page}
-                      className={`${
-                        table.getState().pagination.pageIndex === page - 1
-                          ? 'w-6 bg-purple-100'
-                          : 'w-6 hover:bg-purple-100 hover:curstor-pointer bg-gray-100'
-                      } rounded p-1`}
-                      onClick={() => table.setPageIndex(page - 1)}
-                    >
-                      {page}
-                    </button>
-                  ))}
-                </span>
-                <button
-                  className={`${
-                    !table.getCanNextPage()
-                      ? 'bg-white-100 border border-black'
-                      : 'hover:bg-white-200 border hover:curstor-pointer bg-white-100 w-28 rounded-lg border-black'
-                  } rounded p-1`}
-                  onClick={() => table.nextPage()}
-                  disabled={!table.getCanNextPage()}
-                >
-                  <div className="mr-1 text-lg font-medium flex justify-center gap-2 align-middle rounded-lg">
-                    Next
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      className="size-6"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M12.97 3.97a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 1 1-1.06-1.06l6.22-6.22H3a.75.75 0 0 1 0-1.5h16.19l-6.22-6.22a.75.75 0 0 1 0-1.06Z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                </button>
-              </div>
-              {showModal && renderDeleteSelectedWithModal()}
+              {renderPagination()}
+              {showModal && renderDeleteMemberModal()}
               {showEditModal && renderEditUserModal()}
+              {showSuccess && renderActionSuccess(textToShow, loading)}
+              {showMultipleDeleteModal && renderDeleteSelectModal()}
               <div />
             </div>
           </div>
@@ -384,4 +530,4 @@ export default function TeamMemberList() {
       </div>
     </>
   );
-}
+};
