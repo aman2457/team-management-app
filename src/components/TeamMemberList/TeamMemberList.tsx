@@ -41,6 +41,7 @@ export const TeamMemberList: React.FC<TeamMemberListProps> = (props) => {
     null
   );
 
+
   const [showModal, setShowModal] = React.useState(false);
   const [showEditModal, setShowEditModal] = React.useState(false);
   const [textToShow, setTextToShow] = React.useState('');
@@ -48,8 +49,6 @@ export const TeamMemberList: React.FC<TeamMemberListProps> = (props) => {
   const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
   const [showMultipleDeleteModal, setShowMultipleDeleteModal] =
     React.useState(false);
-  const [saving, setSaving] = React.useState(false);
-  const [deleting, setDeleting] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
 
   const columnHelper = createColumnHelper<TeamMember>();
