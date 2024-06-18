@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'https://team-management-api-service.vercel.app',
+    baseURL: process.env.REACT_APP_API_URL,
     timeout: 5000,
 });
 
